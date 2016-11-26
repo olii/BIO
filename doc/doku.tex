@@ -114,7 +114,7 @@ Dátum:  & \today
 \end{tabular}
 
 \section*{Úvod}
-Táto dokumentácia popisuje implementáciu programu, ktorého cieľom je určiť počet papilárnych línií na obrázku odtlačku prsta. Zadanie nekladie špecifické požiadavky na formu a spracovanie projektu. Vzhľadom na povahu projektu sme sa rozhodli vytvoriť GUI rozhranie pre užívateľa. V rozhraní sa bude dať vyznačiť úsečka pomocou myši. Dva koncové body úsečky budú interpretované ako vstupné body od užívateľa, medzi ktorými sa bude určovať počet papilárnych línií.
+Táto dokumentácia popisuje implementáciu programu, ktorého cieľom je určiť počet papilárnych línií na obrázku odtlačku prsta. Zadanie nekladie špecifické požiadavky na formu a spracovanie projektu. Vzhľadom na povahu projektu sme sa rozhodli vytvoriť GUI rozhranie pre užívateľa. V~rozhraní sa bude dať vyznačiť úsečka pomocou myši. Dva koncové body úsečky budú interpretované ako vstupné body od užívateľa, medzi ktorými sa bude určovať počet papilárnych línií.
 
 \section*{Úvod do problematiky}
 Pre zistenie počtu papilárnych línií v obrázku odtlačku prsta je nutné vykonať niekoľko transformácií, ktoré vylepšujú kvalitu pôvodného obrázka. To je problém, s ktorým sa musia vysporiadať všetky metódy založené sa zisťovaní dát z obrazových dát. Častý problém je šum alebo fragmentované papilárne línie. Najčastejšou schémou úpravy odtlačku prsta je určenie poľa orientácií(Orientation Field). Následne sa aplikuje vhodne natočený Gaborov filter. Potom sa dáta binarizujú. Výstupným obrazom z preprocesingu je binarizovaný obraz odtlačku prsta. Táto schéma je popísaná v mnohých publikáciách a článkoch \cite{hong, thai} a nazýva sa preprocesing alebo Image Enhancement. Určenie počtu papilárnych línií v zbinarizovanom obrázku je potom triviálne. Všetky fázy preprocesingu a algoritmus určenia metriky RIP count budú uvedené v tomto dokumente.
@@ -144,16 +144,16 @@ Zdrojom informácií sa pre nás stali dva články, ktoré popisujú podobné m
 	\label{fig:1}
 \end{figure}
 
-V priebehu vývoja sme čerpali vstupné dáta výlučne z verejných databáz, ktoré sú dostupné na internete. Kvôli vyššej diverzite sme sa rozhodli využiť niekoľko databáz, ktoré sa nám podarilo stiahnuť. Všetky odkazy sú uvedené v závere tejto práce. Problémom vstupných súborov je dramaticky odlišná kvalita jednotlivych obrázkov\ref{fig:1}, nie len z rozdielnych databáz ale aj vrámci jednej databázy. Okrem toho, niektoré obrázky sú zachytené použitím iných senzorov, čo priamo ovplyvňuje charaketristiku obrázka. Vo preprocesingu musíme zvoliť vhodné hodnoty parametrov pre daný obrázok a zaistiť tak aby bola kvalita výstupu čo najvýššia. Rozhodli sme sa nechať užívateľovi možnosť priamo nastaviť jeden parameter, ktorý sa mení vzhľadom na vstupnú charakteristiku obrázka -- prah variancie. Tento parameter slúži k odlíšenia pozadia obrázka od popredia.
+V priebehu vývoja sme čerpali vstupné dáta výlučne z verejných databáz, ktoré sú dostupné na internete. Kvôli vyššej diverzite sme sa rozhodli využiť niekoľko databáz, ktoré sa nám podarilo stiahnuť. Všetky odkazy sú uvedené v závere tejto práce. Problémom vstupných súborov je dramaticky odlišná kvalita jednotlivych obrázkov, obrázok \ref{fig:1}, nie len z rozdielnych databáz ale aj vrámci jednej databázy. Okrem toho, niektoré obrázky sú nasnímané použitím iných senzorov, čo priamo ovplyvňuje charaketristiku obrázka. Vo preprocesingu musíme zvoliť vhodné hodnoty parametrov pre daný obrázok a zaistiť tak aby bola kvalita výstupu čo najvýššia. Rozhodli sme sa nechať užívateľovi možnosť priamo nastaviť jeden parameter, ktorý sa mení vzhľadom na vstupnú charakteristiku obrázka -- prah variancie. Tento parameter slúži k separácii pozadia a popredia v obrázku.
 
 \section*{Preprocesing}
-Vrámci preprocesingu sme sa rozhodli vykonať úpravu rozmerov obrázka tak, aby jeho výška aj šírka boli násobkom 16. Jednoducho odrežeme najpravejšie alebo najspodnejšie pixely, podľa vstupných rozmerov. Umožní nám to jednoducho používať blokové transformácie. 
+Vrámci preprocesingu sme sa rozhodli vykonať úpravu rozmerov obrázka tak, aby jeho výška aj šírka boli násobkom 16. Metódou orezania obrázka odstránime najpravejšie prípadne najspodnejšie pixely, podľa vstupných rozmerov. Umožní nám to jednoducho používať blokové transformácie. 
 V prípade, že obrázok je farebný, je konvertovaný na čierno-biely podľa štandardných konvencií. Hodnoty pixelov nadobúdajú hodnoty 0--255 a sú uložené v dátovom type \texttt{unsigned char}.
 
 Vylepšenie obrázka sa zkladá z nasledujúcich fáz. Podrobne ich popíšeme:
 
 \subsection*{Segmentácia}
-Prvou fázou, ktorú vykonávame na vstupnom obrázku je segmentácia. Jej účelom je odlíšiť pozadie obrázka od popredia. Výstupom je takzvaný ROI(Region Of Interest). Algoritmus pracuje na blokoch o veľkosti 16x16 pixelov. Vychádzame z predpokladu, že v pozadí nedochádza k prudkým zmenám hodnôt pixelov. Metrika zmeny je tu zvolená smerodajná odchylka(v materiáloch sa nazýva aj variancia).
+Prvá fáza, ktorú vykonávame na vstupnom obrázku je segmentácia. Jej účelom je odlíšiť pozadie obrázka od popredia. Výstupom je takzvaný ROI(Region Of Interest). Algoritmus pracuje na blokoch o veľkosti 16x16 pixelov. Vychádzame z predpokladu, že na pozadí nedochádza k prudkým zmenám hodnôt pixelov. Ako Metrika zmeny sa používa smerodajná odchylka(v materiáloch sa nazýva aj variancia).
 
 Postup algoritmu je nasledovný:
 \begin{enumerate}
@@ -162,7 +162,7 @@ Postup algoritmu je nasledovný:
 	\item Pokiaľ hodnota variancie je menšia ako prahová hodnota, potom je blok súčasťou pozadia, inak je súčasťou popredia.
 \end{enumerate}
 
-Ilustrovaný algoritmus vykazuje dobré výsledky, pokiaľ je popredie dostatočne odlíšené od pozadia. Nastavenie prahu sa ale významne líši a je špecifické pre každý obrázok. Na obrázkoch \ref{fig:2} je červenou farbou označný blok pozadia a zelenou farbou označený blok popredia. Pozorný čítateľ si určite všimne, že v prvom obrázku stačí nastaviť prah variancie na hodnotu 1. Na druhom obrázku je variancia nastavená na 500 aby segmentácia bola dosatočne kvalitná. Na poslednom obrázku je ilustrovaná chyba, kedy sa popredie označí ako pozadie, pretože došlo k pretečeniu čiernej zložky do bielej.
+Ilustrovaný algoritmus vykazuje dobré výsledky, pokiaľ je popredie dostatočne odlíšené od pozadia. Nastavenie prahu sa ale významne líši a je špecifické pre každý obrázok. Na obrázkoch \ref{fig:2} je červenou farbou označný blok pozadia a zelenou farbou označený blok popredia. Pozorný čítateľ si určite všimne, že v prvom obrázku stačí nastaviť prah variancie na hodnotu 1. Na druhom obrázku je variancia nastavená na 500 aby segmentácia bola dosatočne kvalitná. Na poslednom obrázku je ilustrovaná chyba, kedy sa popredie označí ako pozadie, pretože došlo k pretečeniu čiernej zložky do bielej. V danom prípade sa znížila hodnota variancie bloku pod úroveň prahu.
 
 \begin{figure}[h!]
 	\centering
@@ -229,7 +229,7 @@ M_0 \boldsymbol {-} \sqrt{\frac{V_0 \cdot (I(x,y) -M )^2 }{V}}, & \text{inak}
 \end{equation}
 
 \begin{enumerate}
-	\item Spočítaj priemernú hodnotu a varianciu pre všetky pixely, ktoré patria do popredia..
+	\item Spočítaj priemernú hodnotu a varianciu pre všetky pixely, ktoré patria do popredia.
 	\item Pre každý pixel aplikuj rovnicu \ref{eq:1}, kde $P$ je výstupný pixel, $I$ je vstupný pixel, $V_0$ je zvolená variancia, $M_0$ je zvolená priemerná hodnota,  $M$ je priemerná hodnota,  $V$ je variancia.
 \end{enumerate}
 
@@ -259,9 +259,9 @@ Veľmi dôležitou súčasťou retazca transformácií je určenie smeru, v ktor
 	\label{fig:4}
 \end{figure}
 
-Princípom tejto transformácie je určenie gradientu o osiach X a Y. Niektoré články riešia problém pomocou rozdelenia obrázku na bloky a počítajú uhol bloku dát. My sme sa rozhodli vykonávať transformáciu nad každým pixelom, okolo ktorého vytvoríme blok tak, že daný pixel sa nachádza v strede bloku. Vstupom transformácie je normalizovaný obrázok.
+Princípom tejto transformácie je určenie gradientu o osiach X a Y. Niektoré články riešia problém pomocou rozdelenia obrázku na bloky a počítajú priemerný uhol bloku dát. My sme sa rozhodli vykonávať transformáciu nad každým pixelom, okolo ktorého vytvoríme blok tak, že daný pixel sa nachádza v strede bloku. Vstupom transformácie je normalizovaný obrázok.
 
-Prvým krokom pre získanie poľa orientácií je určenie gradientu(2D derivácie) pre os X a Y pomocou Sobelovho operátora \ref{eq:2.1}.
+Prvým krokom pre získanie poľa orientácií je určenie gradientu(2D derivácie) pre os X a Y pomocou Sobelovho operátora, rovnice \ref{eq:2.1}.
 \begin{align}
 \begin{split}
 D_x &= Sobel(X, image)\\
@@ -270,7 +270,7 @@ D_y &= Sobel(Y, image)\\
 \label{eq:2.1}
 \end{align}
 
-Následne pre každý pixel z popredia vytvoríme blok o veľkosti 11x11 pixelov. Na každý pixel z bloku aplikujeme rovnice \ref{eq:2.2}. Súčtom hodnôt zanesieme do výsledku aj orientácie okolitých pixelov.
+Následne pre každý pixel z popredia vytvoríme blok o veľkosti 11x11 pixelov. Na každý pixel z bloku aplikujeme rovnice \ref{eq:2.2}. Súčtom hodnôt zanesieme do výsledku aj orientácie okolitých pixelov. Robíme to kvôli zjemneniu a vyhladeniu výsledku.
 
 \begin{align}
 \begin{split}
@@ -285,7 +285,7 @@ Nakoniec pre stredový pixel z daného bloku spočítame orientáciu podľa rovn
 
 \begin{align}
 \begin{split}
-\Theta(x,y) &= 0.5 * (\Pi + atan2(2G_{xy}, G_{xx} - G_{yy}))
+\Theta(x,y) &= 0.5 * (\pi + atan2(2 \cdot G_{xy}, G_{xx} - G_{yy}))
 \end{split}
 \label{eq:2}
 \end{align}
@@ -324,23 +324,23 @@ Najzaujímavejším a najzložitejším filtrom v reťazci je Gaborova filtráci
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=.4\linewidth]{images/gabor_kernel}
-	\caption{Vytvorenie orientovaného okna, \cite{hong}}
+	\caption{3D reprezentácia Gaborovho filtra pod uhlom 45$\degree$}
 	\label{fig:7}
 \end{figure}
 
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=.7\linewidth]{images/Screenshot_11}
-	\caption{3D reprezentácia Gaborovho filtra pod uhlom 45$\degree$}
+	\caption{Vytvorenie orientovaného okna, \cite{hong}}
 	\label{fig:6}
 \end{figure}
 
-Z hľadiska spracovania signálov je gaborov filter Gaussovská pásmová priepusť. Modulovacia funkcia je sinus, prípadne kosínus. Vzhľadom na základ filtra v Gausovej distribučnej funkcii je nutné zvoliť parameter $\sigma$. V dokumente \cite{hong} je zvolená hodnota $\sigma_x = \sigma_y = 4$. Čím vyššia je hodnota $\sigma$ tým viac sa do filtrácie zohľadnuje okolie okolo stredu bloku.
+Z hľadiska spracovania signálov je gaborov filter Gaussovská pásmová priepusť. Modulovacia funkcia je sinus, prípadne kosínus. Vzhľadom na základ filtra v Gausovej distribučnej funkcii je nutné zvoliť parameter $\sigma$. V dokumente \cite{hong} je zvolená hodnota $\sigma_x = \sigma_y = 4$. Čím vyššia je hodnota $\sigma$ tým viac sa do výslednej hodnoty primiešava hodnota okolitých pixelov.
 
 
 V predošlej fáze sme zistili pre každý pixel orientáciu papilárnej línie. Gaborov filter môžeme teda natočiť požadovaným smerom. Modulačná frekvencia je dôležitým parametrom filtra, zlé nastavenie frekvencie môže mať významný vplyv na kvalitu výstupného obrázku. 
 
-Určenie frekvencie(vzdialenosti, mezi dvoma vrcholmi) robíme podobne ako \cite{hong}. Pre každý pixel vytvoríme orientované okno s veľkosťou 32x16(dĺžka, šírka) pixelov so stredom v danom pixeli, viď \ref{fig:7}. Po vytvorení okna prichádza na radu priemerovanie hodnôt cez šírku okna. Výstupom je okno s veľkosťou 32x1 pixelov, ktoré interpretujeme ako 1D signál podobný sinusoidu. Určenie vzdialenosti medzi dvomi vrcholmi vykonávame na základe našej vlastnej metódy. Najprv spočítame FFT nad 1D signálom. Potom jednotlivé zastúpenia modulov frekvencií spočítame váženým priemerom(veľkosť modulu frekvencie $\cdot$ frekvencia). Maximálna frekvencia je nastavená na 11 kmitov. 
+Určenie frekvencie(vzdialenosti mezi dvoma vrcholmi) robíme podobne ako v práci \cite{hong}. Pre každý pixel vytvoríme orientované okno s veľkosťou 32x16(dĺžka, šírka) pixelov so stredom v danom pixeli, viď obrázok \ref{fig:7}. Po vytvorení okna prichádza na rad priemerovanie hodnôt cez šírku okna. Výstupom je okno s veľkosťou 32x1 pixelov, ktoré interpretujeme ako 1D signál podobný sinusoidu. Určenie vzdialenosti medzi dvomi vrcholmi vykonávame na základe našej vlastnej metódy. Najprv spočítame FFT nad 1D signálom. Potom jednotlivé zastúpenia modulov frekvencií spočítame váženým priemerom(súčin veľkosti modulu frekvencie a frekvencie). Maximálna frekvencia je nastavená na 11 kmitov. 
 
 Odhadovaná frekvencia a smer sú použité na konštrukciu Gaborovho filtra pre daný pixel. Postup je nasledovný:
 
@@ -415,7 +415,7 @@ Maximálny počet papilárnych línii v smere osi Y je zobrazovaný v GUI progra
 
 \section*{GUI}
 Vzhľadom na povahu projektu sme sa už na začiatku rozhodli umožniť užívateľovi grafickou cestou vyznačiť dva body, medzi ktorými dôjde k spočítaniu papilárnych línií. Tieto dva body sme preložili čiarou s kontrastnou farbou. 
-Jednoduché gui s načítaným obrázkom sa nachádza na obrázku \ref{fig:10}
+Jednoduché gui s načítaným obrázkom sa nachádza na obrázku \ref{fig:10}.
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=.7\linewidth]{images/Screenshot_14}
@@ -425,7 +425,7 @@ Jednoduché gui s načítaným obrázkom sa nachádza na obrázku \ref{fig:10}
 
 Po spustení programu sa zobrazí hlavné okno. Užívateľ načíta obrázok kliknutím na tlačidlo \texttt{Load Image}. Zobrazí sa štandardný dialóg operačného systému pre výber súboru. Potom sa obrázok zobrazí v GUI. Nasleduje fáza segmentácie. V dolnej časti GUI sa nachádza horizontálny posúvač spolu s malým oknom zobrazujúcim aktuálnu hodnotu prahu variancie. Užívateľ môze meniť prah a dynamicky s tým dochádza k prekresľovaniu obrázka. Zelená farba označuje popredie, červená pozadie.
 
-V prípade, že užívateľ je spokojný s nastavením segmentačného prahu tak sa môže pristúpiť k preprocesigu. K zahájeniu dôjde pri  stlační tlačidla \texttt{Image Enhance}. Po malej chvíli sa zobrazí v GUI binarizovaný obrázok \ref{fig:11}. 
+Ak je užívateľ spokojný s nastavením segmentačného prahu môže spustiť fázu preprocesigu. K zahájeniu dôjde pri  stlační tlačidla \texttt{Image Enhance}. Po malej chvíli sa zobrazí v GUI binarizovaný obrázok, viď obrázok \ref{fig:11}. 
 
 \begin{figure}[h!]
 	\centering
@@ -434,7 +434,7 @@ V prípade, že užívateľ je spokojný s nastavením segmentačného prahu tak
 	\label{fig:11}
 \end{figure}
 
-Do tohoto obrázku už užívateľ môže nakresliť čiaru podobne ako v grafickom editore. Počet papilárnych línií pod čiarou sa zobrazí na pravej strane GUI pri popisku \texttt{RIP count}. Koliečkom myši môže užívateľ obrázok priblížiť/oddialiť. Pri držaní pravého tlačítka myši a jej pohybovaním dochádza k posuvu obrázka(tzv. Drag Mode). Naším cieľom bolo čo najviac uľahčiť prácu uzívateľovi.
+Do tohoto obrázku už užívateľ môže nakresliť čiaru podobne ako v grafickom editore. Počet papilárnych línií pod čiarou sa zobrazí na pravej strane GUI pri popisku \texttt{RIP count}. Koliečkom myši môže užívateľ obrázok priblížiť/oddialiť. Pri držaní pravého tlačítka myši a jej pohybovaním dochádza k posuvu obrázka(tzv. Drag Mode). Naším cieľom bolo zabezpečiť komfortné ovládanie programu.
 
 \begin{figure}[h!]
 	\centering
@@ -448,6 +448,9 @@ Do tohoto obrázku už užívateľ môže nakresliť čiaru podobne ako v grafic
 	\item Qt framework 5.4.0 - multiplatformné GUI
 	\item CImg - knižnica pre prácu s obrázkami
 \end{itemize}
+
+\section*{Kompilácia}
+V archíve sa nachádza kompletný projekt pre Qt Creator. Manuálna kompilácia je možná s použitím knižníc Qt a programom \texttt{qmake}.
 
 \pagebreak
 
@@ -479,6 +482,7 @@ Pre vyšší užívateľský komfort sme pripravili jednoduché GUI, ktoré dovo
 \end{thebibliography}
 
 
-
+\section*{Poznámky}
+V obrázkoch GUI nie je zobrazovaná čiara označujúca miesto s maximálnym počtom papilárnych línií. V čase písania dokumentácie táto funkcionalita nebola dokončená. Vo finálnom produkte sa zobrazuje modrá čiara v mieste s maximálnym počtom papilárnych línií.
 
 \end{document}
