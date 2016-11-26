@@ -127,6 +127,23 @@ void MainWindow::on_ImageEnhanceButton_clicked()
     ui->graphicsView->loadImage(enhanced);
     // enable draw-line
     ui->graphicsView->setEnableLine(true);
+
+    // find maximal papilary count
+    int max = -1;
+    int pos = 0;
+    for(int i = 0; i < cimg.width(); i++)
+    {
+        int count= ui->graphicsView->LineSampler(i, 0, i, cimg.height()-1 );
+        if (count > max)
+        {
+            max = count;
+            pos = i;
+        }
+    }
+    ui->maximalX->setText(QString::number(pos));
+    ui->maximalXcount->setText(QString::number(max));
+    ui->graphicsView->DrawMaxLine(pos, 0, pos, cimg.height()-1);
+
 }
 
 void MainWindow::RIPvalue(int value)

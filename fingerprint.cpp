@@ -64,7 +64,7 @@ QImage Convert(const CImg<float>& img)
     return qimg;
 }
 
-QImage Convert(const CImg<unsigned>& img)
+QImage Convert(const CImg<unsigned char> &img)
 {
     QImage qimg(img.width(), img.height(), QImage::Format_ARGB32);
 

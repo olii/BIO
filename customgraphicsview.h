@@ -18,6 +18,9 @@ public:
     bool getEnableLine() const;
     void setEnableLine(bool value);
 
+    int LineSampler(int x0, int y0, int x1, int y1);
+    void DrawMaxLine(int x0, int y0, int x1, int y1);
+
 public slots:
     void mousePressEvent(QMouseEvent* e);
     void mouseReleaseEvent(QMouseEvent* e);
@@ -26,9 +29,10 @@ public slots:
 
 signals:
     void RIP(int);
+
 private:
-    std::vector<int> bhm_line(int x1, int y1, int x2, int y2);
     void LineSampler();
+    std::vector<int> bhm_line(int x1, int y1, int x2, int y2);
 
     QGraphicsScene scene;
 

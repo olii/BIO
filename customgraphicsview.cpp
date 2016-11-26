@@ -56,7 +56,6 @@ void CustomGraphicsView::mousePressEvent(QMouseEvent* e)
         begin = mapToScene(e->pos());
         begin.setX(static_cast<int>(begin.x()) + 0.5);
         begin.setY(static_cast<int>(begin.y()) + 0.5);
-        qDebug() << "begin " << begin;
         e->accept();
     }
 }
@@ -73,7 +72,8 @@ void CustomGraphicsView::mouseReleaseEvent(QMouseEvent* e)
     if (e->button() == Qt::LeftButton && enableLine)
     {
         end = mapToScene(e->pos());
-        qDebug() << "end " << end;
+        end.setX(static_cast<int>(end.x()) + 0.5);
+        end.setY(static_cast<int>(end.y()) + 0.5);
         e->accept();
         LineSampler();
 
@@ -105,6 +105,8 @@ void CustomGraphicsView::mouseMoveEvent(QMouseEvent* e)
         return;
 
     auto tmp = mapToScene(e->pos());
+    tmp.setX(static_cast<int>(tmp.x()) + 0.5);
+    tmp.setY(static_cast<int>(tmp.y()) + 0.5);
     if (line)
     {
         line->setLine(QLineF(begin, tmp));
@@ -220,18 +222,26 @@ std::vector<int> CustomGraphicsView::bhm_line(int x1, int y1, int x2, int y2)
 
 void CustomGraphicsView::LineSampler()
 {
-    auto values = CustomGraphicsView::bhm_line(begin.x(), begin.y(), end.x(), end.y());
+    int count = 0;
+    count = LineSampler(begin.x(), begin.y(), end.x(), end.y());
+    emit RIP(count);
+}
+
+int CustomGraphicsView::LineSampler(int x0, int y0, int x1, int y1)
+{
+    auto values = CustomGraphicsView::bhm_line(x0, y0, x1, y1);
 
     if (values.empty())
-        return;
+        return 0;
 
     int count = 0;
 
     int prev_state = 0;
     if (values[0] == 0)
     {
-        count ++;
-    } else
+        count++;
+    }
+    else
     {
         prev_state = 255;
     }
@@ -239,12 +249,17 @@ void CustomGraphicsView::LineSampler()
     {
         if (x != prev_state && x == 0)
         {
-            count ++;
+            count++;
         }
         prev_state = x;
     }
 
-    emit RIP(count);
+    return count;
+}
+
+void CustomGraphicsView::DrawMaxLine(int x0, int y0, int x1, int y1)
+{
+    scene.addLine(x0, y0, x1, y1, QPen(QColor(0, 0, 255)));
 }
 
 bool CustomGraphicsView::getEnableLine() const

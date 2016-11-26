@@ -16,7 +16,7 @@ constexpr int NORM_V0 = 100;
 typedef std::vector<std::vector<bool>> BLOCK_VALIDITY;
 
 void ToBW(QImage& image);
-QImage Convert(const CImg<unsigned>& img);
+QImage Convert(const CImg<unsigned char>& img);
 QImage Convert(const CImg<float>& img);
 CImg<unsigned char> Convert(const QImage& img);
 
